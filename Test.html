@@ -6,93 +6,192 @@
     <title>Age Calculator</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .calculator-container {
-            background-color: #ffffff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
-            border: 2px solid #007BFF; 
-        }
-        input[type="number"] {
-            padding: 10px;
-            margin: 5px 0;
-            width: 100%;
-            box-sizing: border-box;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            transition: border-color 0.3s;
-        }
-        input[type="number"]:focus {
-            border-color: #007BFF; 
-            outline: none;
-        }
-        button {
-            padding: 10px;
-            width: 100%;
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        button:hover {
-            background-color: #0056b3; 
-        }
-        .result {
-            margin-top: 20px;
-            font-size: 18px;
-            color: #333;
-        }
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.container {
+    background-color: #ffffff;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 300px;
+    text-align: center;
+}
+
+h1 {
+    margin-bottom: 20px;
+}
+
+.search-bar input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.playlist-container {
+    max-height: 200px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+}
+
+#playlist {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+#playlist li {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    cursor: pointer;
+}
+
+#playlist li:hover, #playlist li.active {
+    background-color: #f0f0f0;
+}
+
+.controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.controls button {
+    padding: 10px 20px;
+    border: none;
+    background-color: #007bff;
+    color: #fff;
+    cursor: pointer;
+    border-radius: 5px;
+    margin-right: 10px;
+}
+
+.controls button:hover {
+    background-color: #0056b3;
+}
+
+#volumeControl {
+    width: 100px;
+}
+
     </style>
 </head>
 <body>
 
-<div class="calculator-container">
-    <h2>Age Calculator</h2>
-    <form id="ageForm">
-        <input type="number" id="day" placeholder="Day" min="1" max="31" required>
-        <input type="number" id="month" placeholder="Month" min="1" max="12" required>
-        <input type="number" id="year" placeholder="Year" required>
-        <button type="submit">Calculate Age</button>
-    </form>
-    <div class="result" id="result"></div>
-</div>
+<div class="container">
+        <h1>Web Music Player</h1>
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="Search for music...">
+        </div>
+        <div class="playlist-container">
+            <ul id="playlist">
+                
+            </ul>
+        </div>
+        <div class="controls">
+            <button id="prevBtn">Prev</button>
+            <button id="playPauseBtn">Play</button>
+            <button id="nextBtn">Next</button>
+            <input type="range" id="volumeControl" min="0" max="1" step="0.1" value="0.5">
+        </div>
+        <audio id="audioPlayer" controls hidden></audio>
+    </div>
 
 <script>
-document.getElementById('ageForm').addEventListener('submit', function(event) {
-    event.preventDefault();
 
-    
-    const day = parseInt(document.getElementById('day').value);
-    const month = parseInt(document.getElementById('month').value);
-    const year = parseInt(document.getElementById('year').value);
+const playlist = [
+    { title: "Song 1", src: "music/song1.mp3" },
+    { title: "Song 2", src: "music/song2.mp3" },
+    { title: "Song 3", src: "music/song3.mp3" },
+];
 
-    
-    const today = new Date();
-    const todayDay = today.getDate();
-    const todayMonth = today.getMonth() + 1; 
-    const todayYear = today.getFullYear();
+let currentSongIndex = 0;
+let isPlaying = false;
 
-    
-    let age = todayYear - year;
-    
-    
-    if (todayMonth < month || (todayMonth === month && todayDay < day)) {
-        age--;
+const audioPlayer = document.getElementById('audioPlayer');
+const playlistElement = document.getElementById('playlist');
+const playPauseBtn = document.getElementById('playPauseBtn');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+const volumeControl = document.getElementById('volumeControl');
+const searchInput = document.getElementById('searchInput');
+
+// Load playlist dynamically
+function loadPlaylist() {
+    playlistElement.innerHTML = ''; 
+    playlist.forEach((song, index) => {
+        const li = document.createElement('li'); 
+        li.textContent = song.title; 
+        li.addEventListener('click', () => playSong(index)); 
+        playlistElement.appendChild(li); 
+    });
+}
+
+function playSong(index) {
+    currentSongIndex = index;
+    audioPlayer.src = playlist[currentSongIndex].src; 
+    audioPlayer.play();
+    isPlaying = true;
+    updatePlayPauseButton();
+    highlightCurrentSong();
+}
+
+function playPause() {
+    if (isPlaying) {
+        audioPlayer.pause();
+    } else {
+        audioPlayer.play();
     }
+    isPlaying = !isPlaying;
+    updatePlayPauseButton();
+}
 
-    
-    document.getElementById('result').textContent = `Your age is ${age} years.`;
+function prevSong() {
+    currentSongIndex = (currentSongIndex - 1 + playlist.length) % playlist.length;
+    playSong(currentSongIndex);
+}
+
+function nextSong() {
+    currentSongIndex = (currentSongIndex + 1) % playlist.length;
+    playSong(currentSongIndex);
+}
+
+function updatePlayPauseButton() {
+    playPauseBtn.textContent = isPlaying ? 'Pause' : 'Play';
+}
+
+function highlightCurrentSong() {
+    const items = playlistElement.querySelectorAll('li');
+    items.forEach((item, index) => {
+        item.classList.toggle('active', index === currentSongIndex);
+    });
+}
+
+
+volumeControl.addEventListener('input', (e) => {
+    audioPlayer.volume = e.target.value;
 });
+
+
+searchInput.addEventListener('input', (e) => {
+    const query = e.target.value.toLowerCase();
+    const items = playlistElement.querySelectorAll('li');
+    items.forEach((item, index) => {
+        const isVisible = playlist[index].title.toLowerCase().includes(query);
+        item.style.display = isVisible ? '' : 'none';
+    });
+});
+
+
+loadPlaylist();
+
 </script>
 
 </body>
